@@ -1,74 +1,85 @@
-import math, { add, divide, MathNumericType, multiply, subtract } from 'mathjs'
+import {
+  add,
+  divide,
+  dot,
+  MathArray,
+  MathNumericType,
+  Matrix,
+  multiply,
+  random,
+  subtract,
+  transpose,
+} from 'mathjs'
 
-export const ann = () => {
-  // ann with backpropagation that returns if the input is a number in range [1, 3]
-  const nonlin = (
-    x: number | math.MathArray | math.Matrix | MathNumericType,
-    deriv = false,
-  ) => {
-    if (deriv === true) {
-      return multiply(x, subtract(1, x))
-    }
-    return divide(1, add(1, Math.exp(-x)))
+const nonlin = (x: MathArray | Matrix | MathNumericType, deriv = false) => {
+  return deriv ? multiply(x, subtract(1, x)) : divide(1, add(1, Math.exp(-x)))
+}
+
+export const learn = (
+  inputLayer: number[][],
+  output: number[][],
+  hiddenLayerSize: number,
+) => {
+  let inputToHiddenLayerWeights: number[] = random([20, 16], 0, 1)
+
+  let hiddenToOutputLayerWeights = random([16, 3], 0, 1)
+
+  let outputLayer = [[0, 0, 0]]
+
+  // console.table(inputLayer)
+  // console.table(inputToHiddenLayerWeights)
+  // console.table(hiddenToOutputLayerWeights)
+
+  for (let i = 0; i < 60000; i++) {
+    const hiddenLayer = multiply(inputLayer, inputToHiddenLayerWeights).map(x =>
+      (x as number[]).map(y => nonlin(y)),
+    ) as number[][]
+    // console.table(hiddenLayer)
+
+    outputLayer = multiply(hiddenLayer, hiddenToOutputLayerWeights).map(x =>
+      (x as number[]).map(y => nonlin(y)),
+    ) as number[][]
+    // console.table(outputLayer)
+
+    const outputLayerError = subtract(output, outputLayer)
+    // console.table(outputLayerError)
+
+    const outputLayerDelta = multiply(
+      outputLayerError.flat(),
+      nonlin(outputLayer.flat(), true),
+    ) as number[]
+    // console.table(outputLayerDelta)
+
+    const hiddenLayerError = [
+      multiply(hiddenToOutputLayerWeights, outputLayerDelta),
+    ] as number[][]
+    // console.table(hiddenLayerError)
+
+    const hiddenLayerDelta = [
+      multiply(hiddenLayerError.flat(), nonlin(hiddenLayer.flat(), true)),
+    ] as number[]
+    // console.table(hiddenLayerDelta)
+
+    // console.table(inputLayer)
+    // console.table(inputToHiddenLayerWeights)
+    // console.table(transpose(hiddenLayer))
+    // console.table(hiddenToOutputLayerWeights)
+    // console.table(transpose(outputLayer))
+
+    // console.table(transpose(hiddenLayer))
+    // console.table(outputLayerDelta)
+    hiddenToOutputLayerWeights = add(
+      hiddenToOutputLayerWeights,
+      multiply(transpose(hiddenLayer), [outputLayerDelta]),
+    ) as number[]
+    // console.table(hiddenToOutputLayerWeights)
+
+    inputToHiddenLayerWeights = add(
+      inputToHiddenLayerWeights,
+      multiply(transpose(inputLayer), hiddenLayerDelta),
+    ) as number[]
+    // console.table(inputToHiddenLayerWeights)
   }
 
-  const input = [0, 1, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 1, 1, 0]
-
-  const output = [1, 0, 0]
-
-  let inputToHiddenLayerWheights = new Array(20)
-    .fill(0)
-    .map(() => new Array(16).fill(0).map(() => Math.random()))
-
-  let hiddenToOutputLayerWheights = new Array(16)
-    .fill(0)
-    .map(() => new Array(3).fill(0).map(() => Math.random()))
-
-  const hiddenLayer = multiply(input, inputToHiddenLayerWheights).map(x =>
-    nonlin(x),
-  ) as number[][]
-  // console.log(hiddenLayer)
-
-  const outputLayer = multiply(hiddenLayer, hiddenToOutputLayerWheights).map(
-    x => nonlin(x),
-  ) as number[][]
-  // console.log(outputLayer)
-
-  const outputLayerError = subtract(output, outputLayer)
-  // console.log(outputLayerError)
-
-  const outputLayerDelta = multiply(outputLayerError, nonlin(outputLayer, true))
-  // console.log(outputLayerDelta)
-
-  const hiddenLayerError = multiply(
-    hiddenToOutputLayerWheights,
-    outputLayerDelta,
-  )
-  // console.log(hiddenLayerError)
-
-  const hiddenLayerDelta = multiply(
-    hiddenLayerError,
-    nonlin(hiddenLayer, true),
-  ) as number[]
-  console.log(hiddenLayerDelta)
-
-  const a = hiddenLayerDelta.map(x => [x])
-
-  const b = multiply(a, input)
-
-  console.log(b)
-
-  // hiddenToOutputLayerWheights = add(
-  //   hiddenToOutputLayerWheights,
-  //   multiply(hiddenLayer, outputLayerDelta) as number[][],
-  // )
-  // console.log(hiddenToOutputLayerWheights)
-
-  // inputToHiddenLayerWheights = add(
-  //   inputToHiddenLayerWheights,
-  //   multiply(input, hiddenLayerDelta) as number[][],
-  // )
-  // console.log(inputToHiddenLayerWheights)
-
-  return outputLayer
+  console.table(outputLayer)
 }

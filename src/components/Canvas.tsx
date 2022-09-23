@@ -1,6 +1,6 @@
 import styled from '@emotion/styled'
 import { useState } from 'react'
-import { ann } from '../utils/functions'
+import { learn } from '../utils/functions'
 import Square from './Square'
 
 const Canvas: React.FC = () => {
@@ -31,7 +31,7 @@ const Canvas: React.FC = () => {
           ))}
         </Row>
       ))}
-      <button onClick={() => ann()}>asdasd</button>
+      <button>asdasd</button>
     </Container>
   )
 }
