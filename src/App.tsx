@@ -1,11 +1,13 @@
 import { useState } from 'react'
-import Canvas from './components/Canvas'
+import CanvasContextProvider from './context/CanvasContext'
+import Home from './components/Home'
 
 function App() {
   return (
     <div className="App">
-      <p>a</p>
-      <Canvas></Canvas>
+      <CanvasContextProvider>
+        <Home></Home>
+      </CanvasContextProvider>
     </div>
   )
 }

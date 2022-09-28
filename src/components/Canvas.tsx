@@ -1,18 +1,15 @@
-import styled from '@emotion/styled'
-import { useState } from 'react'
-import { learn } from '../utils/functions'
+import { useContext } from 'react'
+import { CanvasContext } from '../context/CanvasContext'
+import { Row, Container } from './Canvas.styles'
 import Square from './Square'
 
 const Canvas: React.FC = () => {
-  const [canvas, setCanvas] = useState<boolean[][]>(
-    new Array(4).fill(null).map(() => new Array(5).fill(false)),
-  )
+  const { canvas, setCanvas } = useContext(CanvasContext)
 
   const handleLeftClick = (position: [number, number]) => {
     const [row, col] = position
     canvas[row][col] = !canvas[row][col]
     setCanvas([...canvas])
-    console.log('canvas', canvas)
   }
 
   return (
@@ -31,15 +28,8 @@ const Canvas: React.FC = () => {
           ))}
         </Row>
       ))}
-      <button>asdasd</button>
     </Container>
   )
 }
 
 export default Canvas
-
-const Container = styled.div`
-  display: flex;
-`
-
-const Row = styled.div``
