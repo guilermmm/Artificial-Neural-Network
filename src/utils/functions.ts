@@ -1,5 +1,5 @@
 import { add, multiply, random, subtract, transpose } from 'mathjs'
-import { fives, fours, map, others, zip } from './consts'
+import { fives, fours, others } from './consts'
 import { ActivationFn, Matrix } from './types'
 
 const sigmoid = (x: number): number => 1 / (1 + Math.exp(-x))
@@ -12,6 +12,11 @@ const activationFnMap: Record<
   Sigmoid: [sigmoid, x => sigmoid(x) * (1 - sigmoid(x))],
   Tanh: [tanh, x => 1 - tanh(x) ** 2],
 }
+
+const map = (a: Matrix, fn: (x: number) => number) => a.map(n => n.map(fn))
+
+const zip = (a: Matrix, b: Matrix, fn: (x: number, y: number) => number) =>
+  a.map((row, i) => row.map((x, j) => fn(x, b[i][j])))
 
 export const train = (
   activationFn: ActivationFn,

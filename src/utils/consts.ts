@@ -1,4 +1,3 @@
-import { multiply, pow, subtract } from 'mathjs'
 import { ActivationFn, Matrix } from './types'
 
 // 6 4's
@@ -273,12 +272,3 @@ export const others: Matrix[] = [
     [0, 1, 1, 0],
   ],
 ].map(layer => [layer.flat()])
-
-export const map = (a: Matrix, fn: (x: number) => number) =>
-  a.map(n => n.map(fn))
-
-export const zip = (
-  a: Matrix,
-  b: Matrix,
-  fn: (x: number, y: number) => number,
-) => a.map((row, i) => row.map((x, j) => fn(x, b[i][j])))
