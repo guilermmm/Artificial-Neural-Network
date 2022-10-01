@@ -1,27 +1,29 @@
 import { createContext, useState } from 'react'
 
-export const CanvasContext = createContext(
-  {} as { canvas: boolean[][]; setCanvas: (canvas: boolean[][]) => void },
-)
+interface Context {
+  canvas: (0 | 1)[][]
+  setCanvas: (canvas: (0 | 1)[][]) => void
+}
+
+export const canvasContext = createContext({} as Context)
 
 interface Props {
   children: React.ReactNode
 }
 
 const CanvasContextProvider: React.FC<Props> = ({ children }) => {
-  const [canvas, setCanvas] = useState(
-    new Array(4).fill(null).map(() => new Array(5).fill(false)),
-  )
+  const [canvas, setCanvas] = useState<(0 | 1)[][]>([
+    [0, 0, 0, 0],
+    [0, 0, 0, 0],
+    [0, 0, 0, 0],
+    [0, 0, 0, 0],
+    [0, 0, 0, 0],
+  ])
 
   return (
-    <CanvasContext.Provider
-      value={{
-        canvas,
-        setCanvas,
-      }}
-    >
+    <canvasContext.Provider value={{ canvas, setCanvas }}>
       {children}
-    </CanvasContext.Provider>
+    </canvasContext.Provider>
   )
 }
 

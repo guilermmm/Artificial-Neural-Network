@@ -1,101 +1,303 @@
-import { useContext, useState } from 'react'
-import { CanvasContext } from '../context/CanvasContext'
-import { learn, test } from '../utils/functions'
+import styled from '@emotion/styled'
+import { useContext, useRef, useState } from 'react'
+import { canvasContext } from '../context/CanvasContext'
+import { answer, train } from '../utils/functions'
+import { ActivationFn, Layer } from '../utils/types'
 import Canvas from './Canvas'
-import {
-  CanvasContainer,
-  Container,
-  Header,
-  MainContainer,
-  OptionsContainer,
-  Selects,
-} from './Home.styles'
 
 const Home: React.FC = () => {
-  const { canvas } = useContext(CanvasContext)
+  const { canvas } = useContext(canvasContext)
 
   const [epochs, setEpochs] = useState(1000)
   const [learningRate, setLearningRate] = useState(0.4)
   const [hiddenNeurons, setHiddenNeurons] = useState(16)
   const [error, setError] = useState(10)
-  const [activation, setActivation] = useState('sigmoid')
+  const [fn, setFn] = useState<ActivationFn>('Sigmoid')
+
+  const [tested, setTested] = useState(false)
+  const [testFn, setTestFn] = useState<(layer: Layer) => Layer>()
+  const [[[four, five, other]], setResult] = useState<Layer>([[0, 0, 0]])
+  const [testError, setTestError] = useState(0)
+
+  const handleTrain = () => {
+    const test = train(fn, epochs, learningRate, hiddenNeurons)
+    setTestFn(() => test)
+  }
+
+  const handleTest = () => {
+    if (testFn) {
+      setTested(true)
+      const result = testFn(canvas)
+      setResult(result)
+    }
+  }
 
   return (
-    <Container>
+    <App>
       <Header>
-        <h1>Artificial Neural Network</h1>
+        <Title>Artificial Neural Network</Title>
       </Header>
       <MainContainer>
         <CanvasContainer>
           <Canvas />
         </CanvasContainer>
-        <OptionsContainer>
-          <Selects>
-            <label htmlFor="activation">Activation:</label>
-            <select
-              name="activation"
+        <Form>
+          <FormControl>
+            <Label htmlFor="activation">Activation Function:</Label>
+            <Select
               id="activation"
-              onChange={e => setActivation(e.target.value)}
+              onChange={e => setFn(e.target.value as ActivationFn)}
             >
-              <option value="sig">Sigmoid</option>
-              <option value="tan">Tangencial</option>
-            </select>
-          </Selects>
-          <div>
-            <label htmlFor="epochs">Epochs:</label>
-            <input
+              <option value="Sigmoid">Sigmoid</option>
+              <option value="Tanh">Hyperbolic Tangent</option>
+            </Select>
+          </FormControl>
+          <FormControl>
+            <Label htmlFor="epochs">Epochs:</Label>
+            <Input
               type="number"
-              defaultValue={'1000'}
+              value={epochs}
               onChange={e => setEpochs(parseInt(e.target.value))}
             />
-          </div>
-          <div>
-            <label htmlFor="learningRate">Learning Rate:</label>
-            <input
+          </FormControl>
+          <FormControl>
+            <Label htmlFor="learningRate">Learning Rate:</Label>
+            <Input
               type="number"
-              defaultValue={'0.4'}
+              value={learningRate}
+              step={0.1}
               onChange={e => setLearningRate(parseFloat(e.target.value))}
             />
-          </div>
-          <div>
-            <label htmlFor="hiddenNeurons">Hidden Neurons:</label>
-            <input
+          </FormControl>
+          <FormControl>
+            <Label htmlFor="hiddenNeurons">Hidden Neurons:</Label>
+            <Input
               type="number"
-              defaultValue={'16'}
+              value={hiddenNeurons}
               onChange={e => setHiddenNeurons(parseInt(e.target.value))}
             />
-          </div>
-          <div>
-            <label htmlFor="error">Error:</label>
-            <input
+          </FormControl>
+          <FormControl>
+            <Label htmlFor="error">Error:</Label>
+            <Input
               type="number"
-              name="error"
-              id="error"
-              defaultValue={'10'}
+              value={error}
               onChange={e => setError(parseInt(e.target.value))}
             />
-          </div>
-          <div>
-            {/* by some celestial force sometimes this click break the app */}
-            <button
-              onClick={() => {
-                learn(activation, epochs, learningRate, hiddenNeurons)
-              }}
-            >
-              learn
-            </button>
-            <button
-              onClick={() => {
-                test(canvas)
-              }}
-            >
-              test
-            </button>
-          </div>
-        </OptionsContainer>
+          </FormControl>
+          <FormControl>
+            <Buttons>
+              <Button onClick={handleTrain}>
+                {testFn ? 'Re-Train' : 'Train'}
+              </Button>
+              {testFn !== undefined && (
+                <Button onClick={handleTest}>Test</Button>
+              )}
+            </Buttons>
+          </FormControl>
+        </Form>
+        <OutputContainer>
+          {tested ? (
+            <>
+              <Title>Output</Title>
+              <Output area="four">
+                <OutputTitle>4</OutputTitle>
+                <OutputValue>{four.toFixed(8)}</OutputValue>
+              </Output>
+              <Output area="five">
+                <OutputTitle>5</OutputTitle>
+                <OutputValue>{five.toFixed(8)}</OutputValue>
+              </Output>
+              <Output area="other">
+                <OutputTitle>Other</OutputTitle>
+                <OutputValue>{other.toFixed(8)}</OutputValue>
+              </Output>
+              <Output area="answer">
+                <OutputTitle>
+                  Answer is: {answer([[four, five, other]])}
+                </OutputTitle>
+              </Output>
+            </>
+          ) : (
+            <OutputTitle>Output will be shown here after testing</OutputTitle>
+          )}
+        </OutputContainer>
       </MainContainer>
-    </Container>
+    </App>
   )
 }
 
 export default Home
+
+const App = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: stretch;
+  width: 100%;
+  min-height: 100vh;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+`
+
+const Header = styled.header`
+  align-self: center;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  margin-top: 0.25rem;
+`
+
+const Title = styled.h1`
+  font-size: 1.5rem;
+`
+
+const MainContainer = styled.div`
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: auto auto;
+  grid-template-areas:
+    'canvas form'
+    'result result';
+  padding: 0rem 4rem;
+
+  border: 2px solid #ffffff;
+  border-radius: 0.5rem;
+  background-color: var(--bg-secondary);
+`
+
+const CanvasContainer = styled.div`
+  grid-area: canvas;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  padding: 2rem;
+`
+
+const Form = styled.div`
+  grid-area: form;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: center;
+
+  padding: 2rem 2rem 0;
+`
+
+const FormControl = styled.div`
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+
+  justify-content: center;
+  & > * {
+    flex: 1;
+    align-items: stretch;
+  }
+`
+
+const Label = styled.label`
+  margin-left: 0.5rem;
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: bold;
+  line-height: 2;
+`
+
+const Input = styled.input`
+  margin: 0.25rem;
+  padding: 0.75rem;
+  border-radius: 0.25rem;
+  border: none;
+  background-color: var(--color-input);
+  color: var(--text-primary);
+
+  font-family: inherit;
+  font-size: 1rem;
+  text-align: center;
+
+  &:focus {
+    outline: none;
+  }
+`
+
+const Select = Input.withComponent('select')
+
+const Buttons = styled.div`
+  display: flex;
+  justify-content: space-evenly;
+  align-items: center;
+`
+
+const Button = styled.button`
+  margin: 0.5rem;
+  padding: 1rem 2rem;
+  border-radius: 0.25rem;
+  border: none;
+  background-color: var(--color-button);
+  color: white;
+
+  font-family: inherit;
+  font-size: 1.25rem;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition: 0.2s;
+
+  &:hover {
+    background-color: var(--color-button-hover);
+
+    transition: 0.1s ease-in-out;
+
+    transform: scale(1.125);
+  }
+`
+
+const OutputContainer = styled.div`
+  grid-area: result;
+  flex: 1;
+  align-self: stretch;
+  display: grid;
+
+  align-items: center;
+  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-rows: auto auto auto;
+  grid-template-areas:
+    'title title title'
+    'four five other'
+    'answer answer answer';
+  padding: 1rem;
+  gap: 0.5rem;
+`
+
+const Output = styled.div<{ area: string }>`
+  place-self: center;
+  grid-area: ${props => props.area};
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  justify-items: center;
+  padding: 1rem;
+  border: 2px solid #ffffff;
+  border-radius: 0.25rem;
+`
+
+const OutputTitle = styled.h2`
+  place-self: center;
+  grid-area: title;
+  font-size: 1.25rem;
+  font-weight: bold;
+`
+
+const OutputValue = styled.h2`
+  flex: 1;
+  padding: 0.25rem;
+  border: 2px solid var(--color-border);
+  font-size: 1rem;
+  font-weight: bold;
+`
