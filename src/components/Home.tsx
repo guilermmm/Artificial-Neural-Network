@@ -99,7 +99,7 @@ const Home: React.FC = () => {
         <OutputContainer>
           {tested ? (
             <>
-              <Title>Output</Title>
+              <OutputTitle>Output</OutputTitle>
               <Output area="four">
                 <OutputTitle>4</OutputTitle>
                 <OutputValue>{four.toFixed(8)}</OutputValue>
