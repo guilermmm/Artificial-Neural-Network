@@ -1,98 +1,108 @@
 import { add, multiply, random, subtract, transpose } from 'mathjs'
-import { activationFnMap, fives, fours, others } from './consts'
-import { ActivationFn, Layer } from './types'
+import { fives, fours, map, others, zip } from './consts'
+import { ActivationFn, Matrix } from './types'
+
+const sigmoid = (x: number): number => 1 / (1 + Math.exp(-x))
+const tanh = (x: number): number => Math.tanh(x)
+
+const activationFnMap: Record<
+  ActivationFn,
+  [(x: number) => number, (x: number) => number]
+> = {
+  Sigmoid: [sigmoid, x => sigmoid(x) * (1 - sigmoid(x))],
+  Tanh: [tanh, x => 1 - tanh(x) ** 2],
+}
 
 export const train = (
   activationFn: ActivationFn,
   epochs: number,
   learningRate: number,
   hiddenLayerSize: number,
-): ((canvas: Layer) => Layer) => {
-  let inputToHiddenLayerWeights: number[] = random([20, hiddenLayerSize], 0, 1)
-  let hiddenToOutputLayerWeights: number[] = random([hiddenLayerSize, 3], 0, 1)
+): ((canvas: Matrix) => Matrix) => {
+  console.log('Training...')
 
-  const learningFunction = (
-    activationFn: ActivationFn,
-    inputLayer: Layer,
-    expectedOutput: Layer,
-    learningRate: number,
-  ) => {
-    const [fn, fnPrime] = activationFnMap[activationFn]
-    let outputLayer = [[0, 0, 0]]
+  let inputToHiddenLayerWeights: Matrix = random(
+    [20, hiddenLayerSize],
+    0,
+    1,
+  ) as any as Matrix
+  let hiddenToOutputLayerWeights: Matrix = random(
+    [hiddenLayerSize, 3],
+    0,
+    1,
+  ) as any as Matrix
 
-    const hiddenLayer = multiply(inputLayer, inputToHiddenLayerWeights).map(x =>
-      (x as number[]).map(y => fn(y)),
-    ) as Layer
+  const [fn, fnPrime] = activationFnMap[activationFn]
 
-    outputLayer = multiply(hiddenLayer, hiddenToOutputLayerWeights).map(x =>
-      (x as number[]).map(y => fn(y)),
-    ) as Layer
+  const learningFunction = (inputLayer: Matrix, expectedOutput: Matrix) => {
+    const hiddenLayer = map(
+      multiply(inputLayer, inputToHiddenLayerWeights) as Matrix,
+      fn,
+    )
+
+    const outputLayer = map(
+      multiply(hiddenLayer, hiddenToOutputLayerWeights) as Matrix,
+      fn,
+    )
 
     const outputLayerError = subtract(expectedOutput, outputLayer)
 
     const outputLayerDelta = multiply(
-      multiply(
-        outputLayerError.flat(),
-        fnPrime(outputLayer.flat()),
-      ) as number[],
+      zip(outputLayerError, map(outputLayer, fnPrime), multiply),
       learningRate,
-    ) as number[]
+    ) as Matrix
 
-    const hiddenLayerError = [
-      multiply(hiddenToOutputLayerWeights, outputLayerDelta),
-    ] as Layer
-
-    const hiddenLayerDelta = [
+    const hiddenLayerError = transpose(
       multiply(
-        multiply(hiddenLayerError.flat(), fnPrime(hiddenLayer.flat())),
-        learningRate,
-      ),
-    ] as number[]
+        hiddenToOutputLayerWeights,
+        transpose(outputLayerDelta),
+      ) as Matrix,
+    )
+
+    const hiddenLayerDelta = multiply(
+      zip(hiddenLayerError, map(hiddenLayer, fnPrime), multiply),
+      learningRate,
+    ) as Matrix
 
     hiddenToOutputLayerWeights = add(
       hiddenToOutputLayerWeights,
-      multiply(transpose(hiddenLayer), [outputLayerDelta]),
-    ) as number[]
+      multiply(transpose(hiddenLayer), outputLayerDelta),
+    ) as Matrix
 
     inputToHiddenLayerWeights = add(
       inputToHiddenLayerWeights,
       multiply(transpose(inputLayer), hiddenLayerDelta),
-    ) as number[]
+    ) as Matrix
   }
 
-  for (let i = 0; i < epochs; i++) {
-    for (const four of fours)
-      learningFunction(activationFn, four, [[1, 0, 0]], learningRate)
-
-    for (const five of fives)
-      learningFunction(activationFn, five, [[0, 1, 0]], learningRate)
-
-    for (const other of others)
-      learningFunction(activationFn, other, [[0, 0, 1]], learningRate)
-  }
-
-  const test = (canvas: Layer) => {
-    const [fn] = activationFnMap[activationFn]
-
+  const test = (canvas: Matrix) => {
     const inputLayer = [canvas.flat()]
 
-    const hiddenLayer = (
-      multiply(inputLayer, inputToHiddenLayerWeights) as Layer
-    ).map(x => x.map(y => fn(y)))
+    const hiddenLayer = map(
+      multiply(inputLayer, inputToHiddenLayerWeights) as Matrix,
+      fn,
+    )
 
     console.table(hiddenLayer)
 
-    const outputLayer = (
-      multiply(hiddenLayer, hiddenToOutputLayerWeights) as Layer
-    ).map(x => x.map(y => fn(y)))
+    const outputLayer = map(
+      multiply(hiddenLayer, hiddenToOutputLayerWeights) as Matrix,
+      fn,
+    )
 
     return outputLayer
+  }
+
+  for (let i = 0; i < epochs; i++) {
+    for (const four of fours) learningFunction(four, [[1, 0, 0]])
+    for (const five of fives) learningFunction(five, [[0, 1, 0]])
+    for (const other of others) learningFunction(other, [[0, 0, 1]])
   }
 
   return test
 }
 
-export const answer = ([[four, five, other]]: Layer) => {
+export const answer = ([[four, five, other]]: Matrix) => {
   if (four > five && four > other) return 'Four'
   if (five > four && five > other) return 'Five'
   return 'Other'

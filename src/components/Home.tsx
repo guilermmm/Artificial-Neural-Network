@@ -2,7 +2,7 @@ import styled from '@emotion/styled'
 import { useContext, useRef, useState } from 'react'
 import { canvasContext } from '../context/CanvasContext'
 import { answer, train } from '../utils/functions'
-import { ActivationFn, Layer } from '../utils/types'
+import { ActivationFn, Matrix } from '../utils/types'
 import Canvas from './Canvas'
 
 const Home: React.FC = () => {
@@ -15,8 +15,8 @@ const Home: React.FC = () => {
   const [fn, setFn] = useState<ActivationFn>('Sigmoid')
 
   const [tested, setTested] = useState(false)
-  const [testFn, setTestFn] = useState<(layer: Layer) => Layer>()
-  const [[[four, five, other]], setResult] = useState<Layer>([[0, 0, 0]])
+  const [testFn, setTestFn] = useState<(layer: Matrix) => Matrix>()
+  const [[[four, five, other]], setResult] = useState<Matrix>([[0, 0, 0]])
   const [testError, setTestError] = useState(0)
 
   const handleTrain = () => {

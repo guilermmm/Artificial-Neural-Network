@@ -1,8 +1,8 @@
 import { multiply, pow, subtract } from 'mathjs'
-import { ActivationFn, Layer } from './types'
+import { ActivationFn, Matrix } from './types'
 
 // 6 4's
-export const fours: Layer[] = [
+export const fours: Matrix[] = [
   [
     [1, 0, 1, 0],
     [1, 0, 1, 0],
@@ -48,11 +48,11 @@ export const fours: Layer[] = [
 ].map(layer => [layer.flat()])
 
 // 6 5's
-export const fives: Layer[] = [
+export const fives: Matrix[] = [
   [
     [1, 1, 1, 1],
     [1, 0, 0, 0],
-    [1, 1, 1, 1],
+    [0, 1, 1, 1],
     [0, 0, 0, 1],
     [1, 1, 1, 1],
   ],
@@ -103,7 +103,7 @@ export const fives: Layer[] = [
 // 3 7's
 // 2 8's
 // 3 9's
-export const others: Layer[] = [
+export const others: Matrix[] = [
   [
     [0, 0, 0, 0],
     [0, 0, 0, 0],
@@ -274,16 +274,11 @@ export const others: Layer[] = [
   ],
 ].map(layer => [layer.flat()])
 
-export const activationFnMap: Record<
-  ActivationFn,
-  [(x: number) => number, (x: number[]) => number[]]
-> = {
-  Sigmoid: [
-    x => 1 / (1 + Math.exp(-x)),
-    x => multiply(x, subtract(1, x)) as number[],
-  ],
-  Tanh: [
-    x => (Math.exp(2 * x) - 1) / (Math.exp(2 * x) + 1),
-    x => subtract(1, pow(x, 2)) as number[],
-  ],
-}
+export const map = (a: Matrix, fn: (x: number) => number) =>
+  a.map(n => n.map(fn))
+
+export const zip = (
+  a: Matrix,
+  b: Matrix,
+  fn: (x: number, y: number) => number,
+) => a.map((row, i) => row.map((x, j) => fn(x, b[i][j])))
