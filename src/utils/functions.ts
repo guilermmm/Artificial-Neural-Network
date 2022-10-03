@@ -23,6 +23,7 @@ export const train = (
   epochs: number,
   learningRate: number,
   hiddenLayerSize: number,
+  error: number,
 ): ((canvas: Matrix) => Matrix) => {
   console.log('Training...')
 
@@ -39,7 +40,11 @@ export const train = (
 
   const [fn, fnPrime] = activationFnMap[activationFn]
 
-  const learningFunction = (inputLayer: Matrix, expectedOutput: Matrix) => {
+  const learningFunction = (
+    inputLayer: Matrix,
+    expectedOutput: Matrix,
+    errorTreshold: number = error / 100,
+  ) => {
     const hiddenLayer = map(
       multiply(inputLayer, inputToHiddenLayerWeights) as Matrix,
       fn,
@@ -51,6 +56,11 @@ export const train = (
     )
 
     const outputLayerError = subtract(expectedOutput, outputLayer)
+
+    if (isBelowErrorTreshold(outputLayerError, errorTreshold)) {
+      console.log('skip')
+      return
+    }
 
     const outputLayerDelta = multiply(
       zip(outputLayerError, map(outputLayer, fnPrime), multiply),
@@ -104,6 +114,8 @@ export const train = (
     for (const other of others) learningFunction(other, [[0, 0, 1]])
   }
 
+  console.log('Training complete!')
+
   return test
 }
 
@@ -111,4 +123,17 @@ export const answer = ([[four, five, other]]: Matrix) => {
   if (four > five && four > other) return 'Four'
   if (five > four && five > other) return 'Five'
   return 'Other'
+}
+
+const isBelowErrorTreshold = (
+  outputLayerError: Matrix,
+  errorTreshold: number,
+) => {
+  const isBelow = outputLayerError.flat().map(x => {
+    if (x > 0 && x < errorTreshold) return true
+    if (x < 0 && x > -errorTreshold) return true
+    return false
+  })
+
+  return isBelow.every(x => x === true)
 }

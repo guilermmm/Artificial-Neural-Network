@@ -20,7 +20,7 @@ const Home: React.FC = () => {
   const [testError, setTestError] = useState(0)
 
   const handleTrain = () => {
-    const test = train(fn, epochs, learningRate, hiddenNeurons)
+    const test = train(fn, epochs, learningRate, hiddenNeurons, error)
     setTestFn(() => test)
   }
 
