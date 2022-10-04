@@ -1,5 +1,5 @@
 import { add, multiply, random, subtract, transpose } from 'mathjs'
-import { fives, fours, others } from './consts'
+import { fives, fours, unrecognizeds } from './consts'
 import { ActivationFn, Matrix } from './types'
 
 const sigmoid = (x: number): number => 1 / (1 + Math.exp(-x))
@@ -23,7 +23,7 @@ export const train = (
   epochs: number,
   learningRate: number,
   hiddenLayerSize: number,
-  error: number,
+  errorThreshold: number,
 ): ((canvas: Matrix) => Matrix) => {
   console.log('Training...')
 
@@ -40,11 +40,7 @@ export const train = (
 
   const [fn, fnPrime] = activationFnMap[activationFn]
 
-  const learningFunction = (
-    inputLayer: Matrix,
-    expectedOutput: Matrix,
-    errorTreshold: number = error / 100,
-  ) => {
+  const learningFunction = (inputLayer: Matrix, expectedOutput: Matrix) => {
     const hiddenLayer = map(
       multiply(inputLayer, inputToHiddenLayerWeights) as Matrix,
       fn,
@@ -57,7 +53,7 @@ export const train = (
 
     const outputLayerError = subtract(expectedOutput, outputLayer)
 
-    if (isBelowErrorTreshold(outputLayerError, errorTreshold)) {
+    if (isBelowErrorTreshold(outputLayerError, errorThreshold)) {
       console.log('skip')
       return
     }
@@ -109,9 +105,15 @@ export const train = (
   }
 
   for (let i = 0; i < epochs; i++) {
-    for (const four of fours) learningFunction(four, [[1, 0, 0]])
-    for (const five of fives) learningFunction(five, [[0, 1, 0]])
-    for (const other of others) learningFunction(other, [[0, 0, 1]])
+    for (const four of fours) {
+      learningFunction(four, [[1, 0, 0]])
+    }
+    for (const five of fives) {
+      learningFunction(five, [[0, 1, 0]])
+    }
+    for (const unrecognized of unrecognizeds) {
+      learningFunction(unrecognized, [[0, 0, 1]])
+    }
   }
 
   console.log('Training complete!')
@@ -119,21 +121,32 @@ export const train = (
   return test
 }
 
-export const answer = ([[four, five, other]]: Matrix) => {
-  if (four > five && four > other) return 'Four'
-  if (five > four && five > other) return 'Five'
-  return 'Other'
-}
-
 const isBelowErrorTreshold = (
   outputLayerError: Matrix,
-  errorTreshold: number,
+  errorThreshold: number,
 ) => {
   const isBelow = outputLayerError.flat().map(x => {
-    if (x > 0 && x < errorTreshold) return true
-    if (x < 0 && x > -errorTreshold) return true
+    if (x > 0 && x < errorThreshold) return true
+    if (x < 0 && x > -errorThreshold) return true
     return false
   })
 
-  return isBelow.every(x => x === true)
+  return isBelow.every(x => x)
+}
+
+export const answer = (
+  [[four, five, unrecognized]]: Matrix,
+  errorThreshold: number,
+): [string, number] => {
+  const number = (() => {
+    if (four > five && four > unrecognized) return 'Four'
+    if (five > four && five > unrecognized) return 'Five'
+    return 'Unrecognized'
+  })()
+
+  const confidence = Math.max(four, five, unrecognized)
+  const error = 1 - confidence
+
+  if (error > errorThreshold) return ['Unrecognized', error]
+  return [number, error]
 }

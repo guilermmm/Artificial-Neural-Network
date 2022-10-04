@@ -9,15 +9,21 @@ const Home: React.FC = () => {
   const { canvas } = useContext(canvasContext)
 
   const [epochs, setEpochs] = useState(1000)
-  const [learningRate, setLearningRate] = useState(0.4)
   const [hiddenNeurons, setHiddenNeurons] = useState(16)
-  const [error, setError] = useState(10)
+  const [learningRate, setLearningRate] = useState(0.5)
+  const [error, setError] = useState(0.1)
   const [fn, setFn] = useState<ActivationFn>('Sigmoid')
 
   const [tested, setTested] = useState(false)
   const [testFn, setTestFn] = useState<(layer: Matrix) => Matrix>()
-  const [[[four, five, other]], setResult] = useState<Matrix>([[0, 0, 0]])
-  const [testError, setTestError] = useState(0)
+  const [[[four, five, unrecognized]], setResult] = useState<Matrix>([
+    [0, 0, 0],
+  ])
+
+  const [resultAnswer, resultError] = answer(
+    [[four, five, unrecognized]],
+    error,
+  )
 
   const handleTrain = () => {
     const test = train(fn, epochs, learningRate, hiddenNeurons, error)
@@ -61,15 +67,6 @@ const Home: React.FC = () => {
             />
           </FormControl>
           <FormControl>
-            <Label htmlFor="learningRate">Learning Rate:</Label>
-            <Input
-              type="number"
-              value={learningRate}
-              step={0.1}
-              onChange={e => setLearningRate(parseFloat(e.target.value))}
-            />
-          </FormControl>
-          <FormControl>
             <Label htmlFor="hiddenNeurons">Hidden Neurons:</Label>
             <Input
               type="number"
@@ -78,11 +75,25 @@ const Home: React.FC = () => {
             />
           </FormControl>
           <FormControl>
-            <Label htmlFor="error">Error:</Label>
+            <Label htmlFor="learningRate">Learning Rate:</Label>
+            <Input
+              type="number"
+              value={learningRate}
+              step={0.01}
+              min={0}
+              max={1}
+              onChange={e => setLearningRate(parseFloat(e.target.value))}
+            />
+          </FormControl>
+          <FormControl>
+            <Label htmlFor="error">Error Threshold:</Label>
             <Input
               type="number"
               value={error}
-              onChange={e => setError(parseInt(e.target.value))}
+              step={0.01}
+              min={0}
+              max={1}
+              onChange={e => setError(parseFloat(e.target.value))}
             />
           </FormControl>
           <FormControl>
@@ -108,14 +119,15 @@ const Home: React.FC = () => {
                 <OutputTitle>5</OutputTitle>
                 <OutputValue>{five.toFixed(8)}</OutputValue>
               </Output>
-              <Output area="other">
-                <OutputTitle>Other</OutputTitle>
-                <OutputValue>{other.toFixed(8)}</OutputValue>
+              <Output area="unrecognized">
+                <OutputTitle>Unrecognized</OutputTitle>
+                <OutputValue>{unrecognized.toFixed(8)}</OutputValue>
               </Output>
               <Output area="answer">
-                <OutputTitle>
-                  Answer is: {answer([[four, five, other]])}
-                </OutputTitle>
+                <OutputTitle>Answer is: {resultAnswer}</OutputTitle>
+              </Output>
+              <Output area="error">
+                <OutputTitle>Error: {resultError.toFixed(8)}</OutputTitle>
               </Output>
             </>
           ) : (
@@ -263,19 +275,17 @@ const OutputContainer = styled.div`
   align-self: stretch;
   display: grid;
 
-  align-items: center;
   grid-template-columns: 1fr 1fr 1fr;
   grid-template-rows: auto auto auto;
   grid-template-areas:
     'title title title'
-    'four five other'
-    'answer answer answer';
+    'four five unrecognized'
+    'answer answer error';
   padding: 1rem;
   gap: 0.5rem;
 `
 
 const Output = styled.div<{ area: string }>`
-  place-self: center;
   grid-area: ${props => props.area};
   display: flex;
   flex-direction: column;

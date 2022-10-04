@@ -98,11 +98,11 @@ export const fives: Matrix[] = [
 // 3 1's
 // 2 2's
 // 2 3's
-// 3 6's
+// 4 6's
 // 3 7's
 // 2 8's
-// 3 9's
-export const others: Matrix[] = [
+// 4 9's
+export const unrecognizeds: Matrix[] = [
   [
     [0, 0, 0, 0],
     [0, 0, 0, 0],
@@ -214,6 +214,13 @@ export const others: Matrix[] = [
     [1, 1, 1, 0],
     [1, 0, 0, 1],
     [0, 1, 1, 0],
+  ],
+  [
+    [0, 1, 0, 0],
+    [0, 1, 1, 1],
+    [0, 1, 0, 1],
+    [0, 1, 1, 1],
+    [0, 0, 0, 0],
   ],
   [
     [1, 1, 1, 1],
