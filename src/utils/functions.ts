@@ -54,7 +54,6 @@ export const train = (
     const outputLayerError = subtract(expectedOutput, outputLayer)
 
     if (isBelowErrorTreshold(outputLayerError, errorThreshold)) {
-      console.log('skip')
       return
     }
 
@@ -115,6 +114,12 @@ export const train = (
       learningFunction(unrecognized, [[0, 0, 1]])
     }
   }
+
+  console.log('Input to Hidden Layer Weights')
+  console.table(inputToHiddenLayerWeights)
+
+  console.log('Hidden to Output Layer Weights')
+  console.table(hiddenToOutputLayerWeights)
 
   console.log('Training complete!')
 
