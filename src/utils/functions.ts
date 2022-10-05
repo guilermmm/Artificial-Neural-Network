@@ -147,6 +147,6 @@ export const answer = (
   const confidence = Math.max(four, five, unrecognized)
   const error = 1 - confidence
 
-  if (error > errorThreshold) return ['Unrecognized', error]
+  // if (error > errorThreshold) return ['Unrecognized', error]
   return [number, error]
 }
